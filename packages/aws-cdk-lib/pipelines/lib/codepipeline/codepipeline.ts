@@ -52,6 +52,45 @@ export interface CodePipelineProps {
   readonly pipelineName?: string;
 
   /**
+   * Type of the Codepipeline pipeline.
+   *
+   * @default - PipelineType.V2 if the feature flag `CODEPIPELINE_DEFAULT_PIPELINE_TYPE_TO_V2`
+   * is true, PipelineType.V1 otherwise
+   *
+   * @see https://docs.aws.amazon.com/codepipeline/latest/userguide/pipeline-types-planning.html
+   */
+  readonly pipelineType?: cp.PipelineType;
+
+  /**
+   * A list that defines the Codepipeline pipeline variables for a pipeline resource.
+   *
+   * `variables` can only be used when `pipelineType` is set to `PipelineType.V2`.
+   *
+   * @default - No variables
+   */
+  readonly variables?: cp.Variable[];
+
+  /**
+   * The trigger configuration specifying a type of event, such as Git tags, that
+   * starts the Codepipeline pipeline.
+   *
+   * When a trigger configuration is specified, default change detection for repository
+   * and branch commits is disabled.
+   *
+   * `triggers` can only be used when `pipelineType` is set to `PipelineType.V2`.
+   *
+   * @default - No triggers
+   */
+  readonly triggers?: cp.TriggerProps[];
+
+  /**
+   * The method that the pipeline will use to handle multiple executions.
+   *
+   * @default - ExecutionMode.SUPERSEDED
+   */
+  readonly executionMode?: cp.ExecutionMode;
+
+  /**
    * Create KMS keys for the artifact buckets, allowing cross-account deployments
    *
    * The artifact buckets have to be encrypted to support deploying CDK apps to
@@ -467,7 +506,10 @@ export class CodePipeline extends PipelineBase {
     } else {
       this._pipeline = new cp.Pipeline(this, 'Pipeline', {
         pipelineName: this.props.pipelineName,
-        pipelineType: cp.PipelineType.V1,
+        pipelineType: this.props.pipelineType,
+        executionMode: this.props.executionMode,
+        variables: this.props.variables,
+        triggers: this.props.triggers,
         crossAccountKeys: this.props.crossAccountKeys ?? false,
         crossRegionReplicationBuckets: this.props.crossRegionReplicationBuckets,
         reuseCrossRegionSupportStacks: this.props.reuseCrossRegionSupportStacks,
